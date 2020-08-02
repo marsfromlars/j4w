@@ -174,7 +174,9 @@ public class Board {
   public String toString() {
     return IntStream.range( 0, 6 )
       .mapToObj( i -> toStringRow( 5 - i ) + "\n" )
-      .collect( Collectors.joining() );
+      .collect( Collectors.joining() )
+      + "_______\n"
+      + "0123456";
   }
 
   private String toStringRow( int row ) {

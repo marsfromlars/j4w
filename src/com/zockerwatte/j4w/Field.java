@@ -14,6 +14,10 @@ public class Field {
         default: return ".";
       }
     }
+
+    public Status opponent() {
+      return this == RED ? BLUE : RED;
+    }
   };
 
   private final Status status;

@@ -11,6 +11,7 @@
         <echo>javac .......... compile sources</echo>
         <echo>jar ............ create jarfile</echo>
         <echo>test ........... perform unit tests</echo>
+        <echo>run ............ run board</echo>
         <echo></echo>
         <echo>clean .......... delete generated files</echo>
 
@@ -41,7 +42,7 @@
     </target>
 
 
-    <target name="jar" depends="javac, test" description="create jarfile">
+    <target name="jar" depends="javac" description="create jarfile">
 
         <jar
             destfile="target/j4w.jar"
@@ -125,5 +126,16 @@
 
     </target>
 
+    <target name="run" depends="jar">
+
+        <java classname="com.zockerwatte.j4w.Main">
+            <!--
+            <arg value="-h"/>
+            -->
+            <classpath>
+                <pathelement location="target/j4w.jar"/>
+            </classpath>
+        </java>
+    </target>
 
 </project>
