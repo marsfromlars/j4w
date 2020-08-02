@@ -83,6 +83,8 @@ public class BoardTest {
         + ".r....b\n"
         + "bb.b..b\n"
         + "rb.rbbr\n"
+        + "_______\n"
+        + "0123456"
       , new Board()
       .drop( 0, true )
       .drop( 0, false )
