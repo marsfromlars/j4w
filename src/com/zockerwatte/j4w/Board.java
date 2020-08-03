@@ -1,6 +1,9 @@
 package com.zockerwatte.j4w;
 
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -20,6 +23,32 @@ public class Board {
   private Board( List<List<Field>> columns ) {
     this.columns = columns;
     checkForWinner();
+  }
+
+  public static Board load( File file ) throws IOException {
+    BufferedReader in = new BufferedReader( new FileReader( file ) );
+    StringBuilder data = new StringBuilder();
+    String line = in.readLine();
+    while( line != null ) {
+      data.append( line + "\n" );
+      line = in.readLine();
+    }
+    return load( data.toString() );
+  }
+
+  public static Board load( String data ) {
+    Board board = new Board();
+    List<String> lines = Arrays.stream( data.split( "\n" ) ).collect( Collectors.toList() );
+    Collections.reverse( lines );
+    for( int row = 0; row < 6; row++ ) {
+      String line = lines.get( row );
+      for( int column = 0; column < 7; column++ ) {
+        char c = line.charAt( column );
+        Field.Status status = c == 'r' ? Field.Status.RED : c == 'b' ? Field.Status.BLUE : Field.Status.EMPTY;
+        board.columns.get( column ).set( row, new Field( status ) );
+      }
+    }
+    return board;
   }
 
   private void checkForWinner() {
@@ -132,13 +161,13 @@ public class Board {
 
     return new Board(
       IntStream.range( 0, 7 )
-        .mapToObj( i -> dropIfColumn( dropColumnIndex, i, isRed ) )
+        .mapToObj( i -> dropIfColumnIndexIsDropIndex( dropColumnIndex, i, isRed ) )
         .collect( Collectors.toList() )
     );
 
   }
 
-  private List<Field> dropIfColumn( int dropIndex, int columnIndex, boolean isRed ) {
+  private List<Field> dropIfColumnIndexIsDropIndex( int dropIndex, int columnIndex, boolean isRed ) {
     if( dropIndex == columnIndex ) {
       return dropInColumn( dropIndex, isRed );
     }
@@ -158,7 +187,10 @@ public class Board {
       throw new ArrayIndexOutOfBoundsException( "Column " + dropIndex + " already full." );
     }
 
+    // the new field
     newColumn.add( new Field( isRed ? Field.Status.RED : Field.Status.BLUE ) );
+
+    // fill the rest with empty
     while( newColumn.size() < 6 ) {
       newColumn.add( new Field( Field.Status.EMPTY ) );
     }
@@ -195,6 +227,43 @@ public class Board {
 
   public boolean winnerIsBlue() {
     return !winnerIsRed();
+  }
+
+  public int getColumnHeight( int columnIndex ) {
+    return (int) columns.get( columnIndex ).stream().filter( field -> !field.isEmpty() ).count();
+  }
+
+  public boolean equals( Object other ) {
+    if( other.getClass() != Board.class ) {
+      return false;
+    }
+    Board otherBoard = (Board) other;
+    if( hasWinner != otherBoard.hasWinner ) {
+      return false;
+    }
+    if( winner != otherBoard.winner ) {
+      return false;
+    }
+    return IntStream.range( 0, 7 )
+      .filter( i -> columnEqual( otherBoard, i ) )
+      .count() == 7;
+  }
+
+  private boolean columnEqual( Board otherBoard, int columnIndex ) {
+
+    List<Field> thisColumn = columns.get( columnIndex );
+    List<Field> otherColumn = columns.get( columnIndex );
+
+    return IntStream.range( 0, 6 )
+      .filter( i -> thisColumn.get( i ).getStatus() == thisColumn.get( i ).getStatus() )
+      .count() == 6;
+
+  }
+
+  public void save( File file ) throws FileNotFoundException {
+    PrintWriter out = new PrintWriter( file );
+    out.println( toString() );
+    out.close();
   }
 
 }
