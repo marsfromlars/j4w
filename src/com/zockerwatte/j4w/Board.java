@@ -11,17 +11,20 @@ import java.util.stream.IntStream;
 public class Board {
 
   private final List<List<Field>> columns;
+  private final int lastDrop;
   private boolean hasWinner = false;
   private Field.Status winner;
 
   public Board() {
     columns = IntStream.range( 0, 7 )
-      .mapToObj( i -> createEmptyColumn() )
+      .mapToObj( i -> createEmptyColumn( i ) )
       .collect( Collectors.toList() );
+    lastDrop = -1;
   }
 
-  private Board( List<List<Field>> columns ) {
+  private Board( List<List<Field>> columns, int lastDrop ) {
     this.columns = columns;
+    this.lastDrop = lastDrop;
     checkForWinner();
   }
 
@@ -45,7 +48,7 @@ public class Board {
       for( int column = 0; column < 7; column++ ) {
         char c = line.charAt( column );
         Field.Status status = c == 'r' ? Field.Status.RED : c == 'b' ? Field.Status.BLUE : Field.Status.EMPTY;
-        board.columns.get( column ).set( row, new Field( status ) );
+        board.columns.get( column ).set( row, new Field( status, column, row ) );
       }
     }
     return board;
@@ -67,21 +70,21 @@ public class Board {
     }
   }
 
-  private boolean hasFour( int column, int row, Field.Status status ) {
-    if( checkFields( getNorth( column, row ), status ) ) return true;
-    if( checkFields( getSouth( column, row ), status ) ) return true;
-    if( checkFields( getEast( column, row ), status ) ) return true;
-    if( checkFields( getWest( column, row ), status ) ) return true;
-    if( checkFields( getNorthWest( column, row ), status ) ) return true;
-    if( checkFields( getNorthEast( column, row ), status ) ) return true;
-    if( checkFields( getSouthWest( column, row ), status ) ) return true;
-    if( checkFields( getSouthEast( column, row ), status ) ) return true;
+  private boolean hasFour( int column, int row, Field.Status color ) {
+    if( checkIfFourInLine( getNorth( column, row ), color ) ) return true;
+    if( checkIfFourInLine( getSouth( column, row ), color ) ) return true;
+    if( checkIfFourInLine( getEast( column, row ), color ) ) return true;
+    if( checkIfFourInLine( getWest( column, row ), color ) ) return true;
+    if( checkIfFourInLine( getNorthWest( column, row ), color ) ) return true;
+    if( checkIfFourInLine( getNorthEast( column, row ), color ) ) return true;
+    if( checkIfFourInLine( getSouthWest( column, row ), color ) ) return true;
+    if( checkIfFourInLine( getSouthEast( column, row ), color ) ) return true;
     return false;
   }
 
-  private boolean checkFields( List<Field> fields, Field.Status status ) {
+  private boolean checkIfFourInLine( List<Field> fields, Field.Status color ) {
     if( fields.size() == 4 ) {
-      return fields.stream().allMatch( field -> field.getStatus() == status );
+      return fields.stream().allMatch( field -> field.getStatus() == color );
     }
     return false;
   }
@@ -129,13 +132,13 @@ public class Board {
 
   }
 
-  private boolean isOnBoard( int column, int row ) {
+  public boolean isOnBoard( int column, int row ) {
     return column >= 0 && column < 7 && row >= 0 && row < 6;
   }
 
-  private List<Field> createEmptyColumn() {
+  private List<Field> createEmptyColumn( int column ) {
     return IntStream.range( 0, 6 )
-      .mapToObj( i -> new Field( Field.Status.EMPTY ) )
+      .mapToObj( i -> new Field( Field.Status.EMPTY, column, i ) )
       .collect( Collectors.toList() );
   }
 
@@ -155,6 +158,10 @@ public class Board {
       throw new RuntimeException( "Cannot drop, because there is already a winner." );
     }
 
+    if( isDraw() ) {
+      throw new RuntimeException( "Cannot drop, because board is a draw." );
+    }
+
     if( dropColumnIndex < 0 || dropColumnIndex > 6 ) {
       throw new ArrayIndexOutOfBoundsException( "Cannot drop in column " + dropColumnIndex );
     }
@@ -163,6 +170,7 @@ public class Board {
       IntStream.range( 0, 7 )
         .mapToObj( i -> dropIfColumnIndexIsDropIndex( dropColumnIndex, i, isRed ) )
         .collect( Collectors.toList() )
+      , dropColumnIndex
     );
 
   }
@@ -188,11 +196,11 @@ public class Board {
     }
 
     // the new field
-    newColumn.add( new Field( isRed ? Field.Status.RED : Field.Status.BLUE ) );
+    newColumn.add( new Field( isRed ? Field.Status.RED : Field.Status.BLUE, dropIndex, newColumn.size() ) );
 
     // fill the rest with empty
     while( newColumn.size() < 6 ) {
-      newColumn.add( new Field( Field.Status.EMPTY ) );
+      newColumn.add( new Field( Field.Status.EMPTY, dropIndex, newColumn.size() ) );
     }
 
     return newColumn;
@@ -208,13 +216,22 @@ public class Board {
       .mapToObj( i -> toStringRow( 5 - i ) + "\n" )
       .collect( Collectors.joining() )
       + "_______\n"
-      + "0123456";
+      + "0123456\n"
+      + ( hasWinner() ? "WINNER: " + getWinner() : ( isDraw() ? "DRAW" : "NO WINNER" ) );
   }
 
   private String toStringRow( int row ) {
     return IntStream.range( 0, 7 )
-      .mapToObj( i -> "" + get( i, row ).getChar() )
+      .mapToObj( column -> getFieldCharacter( column, row ) )
       .collect( Collectors.joining() );
+  }
+
+  private String getFieldCharacter( int column, int row ) {
+    String result = get( column, row ).getChar();
+//    if( hasWinner && isWinningLine( column, row ) ) {
+//      result = result.toUpperCase();
+//    }
+    return result;
   }
 
   public boolean hasWinner() {
@@ -265,5 +282,28 @@ public class Board {
     out.println( toString() );
     out.close();
   }
+
+  public boolean isDraw() {
+    return IntStream.range( 0, 6 )
+      .allMatch( i -> getColumnHeight( i ) == 6 );
+
+  }
+
+  public Field.Status getWinner() {
+    return winner;
+  }
+
+  public int getLastDrop() {
+    return lastDrop;
+  }
+
+//  public boolean isWinningLine( int column, int row ) {
+//    if( hasWinner() ) {
+//
+//    }
+//    else {
+//      return false;
+//    }
+//  }
 
 }

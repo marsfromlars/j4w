@@ -2,6 +2,9 @@ package com.zockerwatte.j4w;
 
 public class Field {
 
+  private final int row;
+  private final int column;
+
   public static enum Status {
     RED,
     BLUE,
@@ -22,8 +25,10 @@ public class Field {
 
   private final Status status;
 
-  public Field( Status status ) {
+  public Field( Status status, int column, int row ) {
     this.status = status;
+    this.row = row;
+    this.column = column;
   }
 
   public boolean isEmpty() {
@@ -44,6 +49,18 @@ public class Field {
 
   public Status getStatus() {
     return status;
+  }
+
+  public int getColumn() {
+    return column;
+  }
+
+  public int getRow() {
+    return row;
+  }
+
+  public String toString() {
+    return column + ":" + row + " " + status.name();
   }
 
 }

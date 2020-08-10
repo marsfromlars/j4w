@@ -98,7 +98,8 @@ public class BoardTest {
         + "bb.b..b\n"
         + "rb.rbbr\n"
         + "_______\n"
-        + "0123456"
+        + "0123456\n"
+        + "NO WINNER"
       , new Board()
       .drop( 0, true )
       .drop( 0, false )
@@ -310,4 +311,116 @@ public class BoardTest {
 
   }
 
+  @Test
+  public void normalFieldsAreOnBoard() {
+    assertTrue(
+      new Board().isOnBoard( 0, 0 )
+      && new Board().isOnBoard( 6, 0 )
+      && new Board().isOnBoard( 0, 5 )
+      && new Board().isOnBoard( 6, 5 )
+      && new Board().isOnBoard( 3, 3 )
+    );
+  }
+
+  @Test
+  public void tooFarLeftIsNotOnBoard() {
+    assertFalse( new Board().isOnBoard( -1, 0 ) );
+  }
+
+  @Test
+  public void tooFarRightIsNotOnBoard() {
+    assertFalse( new Board().isOnBoard( 7, 0 ) );
+  }
+
+  @Test
+  public void tooFarDownIsNotOnBoard() {
+    assertFalse( new Board().isOnBoard( 0, 6 ) );
+  }
+
+  @Test
+  public void tooFarUpIsNotOnBoard() {
+    assertFalse( new Board().isOnBoard( 0, -1 ) );
+  }
+
+  @Test
+  public void topLeftCornerIs_0_5() {
+
+    Board board = Board.load(
+        "r......\n"
+      + ".......\n"
+      + ".......\n"
+      + ".......\n"
+      + ".......\n"
+      + ".......\n"
+    );
+
+    assertTrue( board.get( 0, 5 ).isRed() );
+    assertEquals( 6, board.get( 6, 0 ).getColumn() );
+    assertEquals( 0, board.get( 6, 0 ).getRow() );
+
+  }
+
+  @Test
+  public void bottomRightCornerIs_6_0() {
+
+    Board board = Board.load(
+        ".......\n"
+      + ".......\n"
+      + ".......\n"
+      + ".......\n"
+      + ".......\n"
+      + "......r\n"
+    );
+
+    assertTrue( board.get( 6, 0 ).isRed() );
+    assertEquals( 6, board.get( 6, 0 ).getColumn() );
+    assertEquals( 0, board.get( 6, 0 ).getRow() );
+
+  }
+
+  @Test
+  public void anEmptyBoardIsNoDraw() {
+    assertFalse( new Board().isDraw() );
+  }
+
+  @Test
+  public void aFullBoardIsADraw() {
+
+    Board board = Board.load(
+          ".brbrbr\n"
+        + "rbrbrbr\n"
+        + "brbrbrb\n"
+        + "brbrbrb\n"
+        + "rbrbrbr\n"
+        + "rbrbrbr\n"
+    );
+
+    board = board.drop( 0, true );
+
+    assertTrue( board.isDraw() );
+
+  }
+
+//  @Test
+//  public void boardRecognizesWinningLines() {
+//
+//    Board board = Board.load(
+//        "r..b...\n" +
+//        "r..b...\n" +
+//        "b.br...\n" +
+//        "rrrr...\n" +
+//        "rbrb.bb\n" +
+//        "brbrbrb" );
+//
+//    assertFalse( board.isWinningLine( 0, 5 ) );
+//    assertFalse( board.isWinningLine( 1, 5 ) );
+//
+//    assertTrue( board.isWinningLine( 0, 2 ) );
+//    assertTrue( board.isWinningLine( 1, 2 ) );
+//    assertTrue( board.isWinningLine( 2, 2 ) );
+//    assertTrue( board.isWinningLine( 3, 2 ) );
+//
+//  }
+
 }
+
